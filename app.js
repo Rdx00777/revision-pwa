@@ -2,7 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- SERVICE WORKER & NOTIFICATIONS ---
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
+        // Use relative path
+        navigator.serviceWorker.register('sw.js')
             .then(reg => console.log('Service Worker registered', reg))
             .catch(err => console.error('Service Worker registration failed', err));
     }
@@ -20,8 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then(reg => {
                 reg.showNotification(title, {
-                    body: body, icon: '/icons/icon-192x192.png',
-                    badge: '/icons/icon-192x192.png', vibrate: [200, 100, 200]
+                    // Use relative paths
+                    body: body, icon: 'icons/icon-192x192.png',
+                    badge: 'icons/icon-192x192.png', vibrate: [200, 100, 200]
                 });
             });
         }
@@ -129,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function renderCompletionChart(percent) {
         const ctx = document.getElementById('overall-completion-chart').getContext('2d');
-        const chartTextColor = (currentTheme === 'light') ? '#1c1c1e' : '#f0f0f0';
         const chartTrackColor = (currentTheme === 'light') ? '#dcdcdc' : '#3a3a3c';
 
         completionChartTextEl.textContent = `${percent}%`;
@@ -214,26 +215,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let day = new Date();
         
         for (let i = 6; i >= 0; i--) {
-            // Get date string for the last 7 days
             let date = new Date(day.getFullYear(), day.getMonth(), day.getDate() - i);
             let dateString = getISODate(date);
             
-            // Set labels (e.g., "Today", "Yest.", "Mon")
             if (i === 0) labels.push('Today');
             else if (i === 1) labels.push('Yest.');
             else labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
             
-            // Find stats for this date
             const stat = stats.find(s => s.date === dateString);
             if (stat) {
-                // Note: Our current stat logic only adds one entry per day
-                // To count *all* revisions, we'd need to store stats differently
-                // For now, we'll just log "1" if a revision happened that day
-                data[6 - i] = 1; // This shows *days* of activity, not total revisions
+                // This logic just checks if *any* revision was done.
+                data[6 - i] = 1; 
             }
         }
-        // A more advanced stat store would track total revisions per day
-        // For now, this shows a simple activity streak
         return { labels, data };
     }
 
@@ -482,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- POMODORO TIMER ---
+    // Ensure these IDs match your HTML
     const timerDisplay = document.getElementById('timer-display');
     const startPauseBtn = document.getElementById('start-pause-btn');
     const resetBtn = document.getElementById('reset-btn');
@@ -490,34 +485,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusTimerDisplay = document.getElementById('focus-timer-display');
     const focusTimerStatus = document.getElementById('focus-timer-status');
     const exitFocusBtn = document.getElementById('exit-focus-btn');
+    
     let pomodoroConfig = { work: 25, break: 5 };
     let timerInterval = null;
     let isPaused = true;
     let isWorkSession = true;
     let isInFocusMode = false;
     let timeLeft = pomodoroConfig.work * 60;
-    const alarm = new Audio('/audio/alarm.mp3');
+    
+    // Use relative path
+    const alarm = new Audio('audio/alarm.mp3');
     alarm.loop = true;
 
     function stopAlarm() { alarm.pause(); alarm.currentTime = 0; }
+    
     function updateTimerDisplay() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
         timerDisplay.textContent = timeString;
-        focusTimerDisplay.textContent = timeString;
+        if (focusTimerDisplay) { // Check if element exists
+            focusTimerDisplay.textContent = timeString;
+        }
     }
     function enterFocusMode() {
         isInFocusMode = true;
         document.body.classList.add('content-hidden');
-        pomodoroFocusOverlay.style.display = 'flex';
-        const newStatus = isWorkSession ? 'Time to Work!' : 'Time for a Break!';
-        focusTimerStatus.textContent = newStatus;
+        if (pomodoroFocusOverlay) {
+            pomodoroFocusOverlay.style.display = 'flex';
+        }
+        if (focusTimerStatus) {
+            focusTimerStatus.textContent = isWorkSession ? 'Time to Work!' : 'Time for a Break!';
+        }
     }
     function exitFocusMode() {
         isInFocusMode = false;
         document.body.classList.remove('content-hidden');
-        pomodoroFocusOverlay.style.display = 'none';
+        if (pomodoroFocusOverlay) {
+            pomodoroFocusOverlay.style.display = 'none';
+        }
         stopAlarm();
     }
     function startTimer() {
@@ -530,12 +537,14 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTimerDisplay();
             if (timeLeft < 0) {
                 clearInterval(timerInterval);
-                alarm.play();
+                alarm.play().catch(e => console.warn("Audio play failed:", e)); // Added catch
                 isWorkSession = !isWorkSession;
                 timeLeft = (isWorkSession ? pomodoroConfig.work : pomodoroConfig.break) * 60;
                 const newStatus = isWorkSession ? 'Time to Work!' : 'Time for a Break!';
                 timerStatus.textContent = newStatus;
-                focusTimerStatus.textContent = newStatus;
+                if (focusTimerStatus) {
+                    focusTimerStatus.textContent = newStatus;
+                }
                 startPauseBtn.textContent = 'Start';
                 isPaused = true;
                 updateTimerDisplay();
@@ -558,13 +567,23 @@ document.addEventListener('DOMContentLoaded', () => {
         startPauseBtn.textContent = 'Start';
         if (isInFocusMode) exitFocusMode();
     }
-    startPauseBtn.addEventListener('click', () => { (isPaused) ? startTimer() : pauseTimer(); });
-    resetBtn.addEventListener('click', resetTimer);
-    pomodoroFocusOverlay.addEventListener('click', (e) => {
-        if (e.target.id === 'exit-focus-btn') return; 
-        (isPaused) ? startTimer() : pauseTimer();
-    });
-    exitFocusBtn.addEventListener('click', () => { pauseTimer(); exitFocusMode(); });
+    
+    // Add checks to prevent errors if elements are missing
+    if(startPauseBtn) {
+        startPauseBtn.addEventListener('click', () => { (isPaused) ? startTimer() : pauseTimer(); });
+    }
+    if(resetBtn) {
+        resetBtn.addEventListener('click', resetTimer);
+    }
+    if(pomodoroFocusOverlay) {
+        pomodoroFocusOverlay.addEventListener('click', (e) => {
+            if (e.target.id === 'exit-focus-btn') return; 
+            (isPaused) ? startTimer() : pauseTimer();
+        });
+    }
+    if(exitFocusBtn) {
+        exitFocusBtn.addEventListener('click', () => { pauseTimer(); exitFocusMode(); });
+    }
 
     // --- SETTINGS LOGIC ---
     const workMinutesInput = document.getElementById('work-minutes-input');
@@ -586,19 +605,21 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTimerDisplay();
         }
     }
-    saveSettingsBtn.addEventListener('click', async () => {
-        const newWork = parseInt(workMinutesInput.value);
-        const newBreak = parseInt(breakMinutesInput.value);
-        if (newWork > 0 && newBreak > 0) {
-            pomodoroConfig.work = newWork;
-            pomodoroConfig.break = newBreak;
-            await db.put('settings', { key: 'pomodoro', work: newWork, break: newBreak });
-            resetTimer(); 
-            alert('Settings saved!');
-        } else {
-            alert('Please enter valid numbers greater than 0.');
-        }
-    });
+    if(saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', async () => {
+            const newWork = parseInt(workMinutesInput.value);
+            const newBreak = parseInt(breakMinutesInput.value);
+            if (newWork > 0 && newBreak > 0) {
+                pomodoroConfig.work = newWork;
+                pomodoroConfig.break = newBreak;
+                await db.put('settings', { key: 'pomodoro', work: newWork, break: newBreak });
+                resetTimer(); 
+                alert('Settings saved!');
+            } else {
+                alert('Please enter valid numbers greater than 0.');
+            }
+        });
+    }
 
     // --- INITIALIZATION ---
     async function init() {
