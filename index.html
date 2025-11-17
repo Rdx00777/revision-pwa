@@ -14,6 +14,7 @@
     <meta name="theme-color" id="theme-color-meta" content="#1e1e1e">
 
     <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 <body>
@@ -27,15 +28,20 @@
     </header>
 
     <main>
-        <section class="card" id="stats-section">
-            <h2>Your Stats</h2>
+        <section class="card" id="dashboard-section">
+            <h2>Dashboard</h2>
+            <div class="chart-container">
+                <div class="completion-chart-wrapper">
+                    <canvas id="overall-completion-chart"></canvas>
+                    <div id="completion-chart-text">0%</div>
+                </div>
+                <div class="history-chart-wrapper">
+                    <canvas id="revision-history-chart"></canvas>
+                </div>
+            </div>
             <div class="stats-container">
                 <div class="stat-item">
-                    <span class.="stat-value" id="stat-overall-completion">0%</span>
-                    <span class="stat-label">Overall Completion</span>
-                </div>
-                <div class="stat-item">
-                    <span class.="stat-value" id="stat-total-revisions">0</span>
+                    <span class="stat-value" id="stat-total-revisions">0</span>
                     <span class="stat-label">Total Revisions</span>
                 </div>
                 <div class="stat-item">
