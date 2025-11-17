@@ -30,16 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- THEME (DARK/LIGHT MODE) ---
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const themeMeta = document.getElementById('theme-color-meta');
+    let currentTheme = 'dark'; // Global var for chart colors
     function checkTheme() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
             document.body.classList.add('light-mode');
             themeToggleBtn.textContent = '🌙';
             themeMeta.content = '#ffffff';
+            currentTheme = 'light';
         } else {
             document.body.classList.remove('light-mode');
             themeToggleBtn.textContent = '☀️';
             themeMeta.content = '#1e1e1e';
+            currentTheme = 'dark';
         }
     }
     themeToggleBtn.addEventListener('click', () => {
@@ -48,11 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('theme', 'light');
             themeToggleBtn.textContent = '🌙';
             themeMeta.content = '#ffffff';
+            currentTheme = 'light';
         } else {
             localStorage.setItem('theme', 'dark');
             themeToggleBtn.textContent = '☀️';
             themeMeta.content = '#1e1e1e';
+            currentTheme = 'dark';
         }
+        renderStats(); // Re-render stats for chart color update
     });
 
     // --- REVISION LOGIC ---
@@ -71,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const DB_NAME = 'RevisionAppDB';
     const DB_VERSION = 1;
     let db;
-
     async function initDB() {
         db = await idb.openDB(DB_NAME, DB_VERSION, {
             upgrade(db) {
@@ -89,30 +94,147 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Database initialized");
     }
 
-    // --- STATS LOGIC ---
+    // --- DASHBOARD & STATS ---
     const totalRevisionsEl = document.getElementById('stat-total-revisions');
     const currentStreakEl = document.getElementById('stat-current-streak');
-    const overallCompletionEl = document.getElementById('stat-overall-completion'); // NEW
+    const completionChartTextEl = document.getElementById('completion-chart-text');
+    let overallChart, revisionChart; // Store chart instances
 
     async function renderStats() {
         const stats = await db.getAll('stats');
+        const subjects = await db.getAll('subjects');
+
+        // 1. Calculate & Render Text Stats
         totalRevisionsEl.textContent = stats.length;
         currentStreakEl.textContent = calculateStreak(stats);
 
-        // NEW: Calculate and render overall completion
-        const subjects = await db.getAll('subjects');
+        // 2. Calculate Completion
         let totalTopics = 0;
         let completedTopics = 0;
         subjects.forEach(subject => {
             totalTopics += subject.topics.length;
             subject.topics.forEach(topic => {
-                if (topic.isComplete) {
-                    completedTopics++;
-                }
+                if (topic.isComplete) completedTopics++;
             });
         });
         const completionPercent = (totalTopics === 0) ? 0 : Math.round((completedTopics / totalTopics) * 100);
-        overallCompletionEl.textContent = `${completionPercent}%`;
+        
+        // 3. Calculate Revision History (Last 7 days)
+        const history = calculateRevisionHistory(stats);
+
+        // 4. Render Charts
+        renderCompletionChart(completionPercent);
+        renderRevisionChart(history.labels, history.data);
+    }
+    
+    function renderCompletionChart(percent) {
+        const ctx = document.getElementById('overall-completion-chart').getContext('2d');
+        const chartTextColor = (currentTheme === 'light') ? '#1c1c1e' : '#f0f0f0';
+        const chartTrackColor = (currentTheme === 'light') ? '#dcdcdc' : '#3a3a3c';
+
+        completionChartTextEl.textContent = `${percent}%`;
+
+        if (overallChart) {
+            overallChart.destroy(); // Destroy old chart before re-drawing
+        }
+        overallChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [percent, 100 - percent],
+                    backgroundColor: ['#34c759', chartTrackColor],
+                    borderWidth: 0,
+                    borderRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+    }
+
+    function renderRevisionChart(labels, data) {
+        const ctx = document.getElementById('revision-history-chart').getContext('2d');
+        const chartGridColor = (currentTheme === 'light') ? '#dcdcdc' : '#3a3a3c';
+        const chartLabelColor = (currentTheme === 'light') ? '#6a6a6a' : '#8e8e93';
+
+        if (revisionChart) {
+            revisionChart.destroy(); // Destroy old chart
+        }
+        revisionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revisions',
+                    data: data,
+                    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                    borderColor: '#007aff',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            color: chartLabelColor,
+                            precision: 0 // No decimal points
+                        },
+                        grid: { color: chartGridColor }
+                    },
+                    x: {
+                        ticks: { color: chartLabelColor },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function calculateRevisionHistory(stats) {
+        let labels = [];
+        let data = [0, 0, 0, 0, 0, 0, 0]; // 7 days
+        let day = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+            // Get date string for the last 7 days
+            let date = new Date(day.getFullYear(), day.getMonth(), day.getDate() - i);
+            let dateString = getISODate(date);
+            
+            // Set labels (e.g., "Today", "Yest.", "Mon")
+            if (i === 0) labels.push('Today');
+            else if (i === 1) labels.push('Yest.');
+            else labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+            
+            // Find stats for this date
+            const stat = stats.find(s => s.date === dateString);
+            if (stat) {
+                // Note: Our current stat logic only adds one entry per day
+                // To count *all* revisions, we'd need to store stats differently
+                // For now, we'll just log "1" if a revision happened that day
+                data[6 - i] = 1; // This shows *days* of activity, not total revisions
+            }
+        }
+        // A more advanced stat store would track total revisions per day
+        // For now, this shows a simple activity streak
+        return { labels, data };
     }
 
     function calculateStreak(stats) {
@@ -166,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const subjectCard = document.createElement('div');
             subjectCard.className = 'subject-card';
             
-            // NEW: Calculate subject completion
             let totalTopics = subject.topics.length;
             let completedTopics = 0;
             subject.topics.forEach(topic => {
@@ -175,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const subjectPercent = (totalTopics === 0) ? 0 : Math.round((completedTopics / totalTopics) * 100);
 
             let topicListHTML = '';
-            subject.topics.forEach((topic) => { // Removed topicIndex, using topic.id
+            subject.topics.forEach((topic) => {
                 const nextRevisionDate = new Date(topic.nextRevisionDate.replace(/-/g, '/'));
                 nextRevisionDate.setHours(0,0,0,0);
                 const isDue = nextRevisionDate <= today;
@@ -224,10 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="add-topic-btn" data-subject-id="${subject.id}">Add Topic</button>
                 </div>
             `;
-            // Manually re-add delete button listener to the h2
             const deleteBtn = subjectCard.querySelector('.delete-subject-btn');
             deleteBtn.addEventListener('click', handleDeleteSubject);
-
             subjectsContainer.appendChild(subjectCard);
         });
         renderTodayRevisions(todayRevisions);
@@ -274,25 +393,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const subjectNameInput = document.getElementById('subject-name-input');
         const subjectName = subjectNameInput.value.trim();
         if (subjectName) {
-            const newSubject = {
-                id: Date.now(),
-                name: subjectName,
-                topics: []
-            };
+            const newSubject = { id: Date.now(), name: subjectName, topics: [] };
             await db.add('subjects', newSubject);
             await renderUI();
             subjectNameInput.value = '';
         }
     });
 
-    // Need a separate handler for the subject delete btn
     async function handleDeleteSubject(e) {
         const subjectId = parseInt(e.target.dataset.subjectId);
         const subject = await db.get('subjects', subjectId);
         if (confirm(`Are you sure you want to delete "${subject.name}" and all its topics?`)) {
             await db.delete('subjects', subjectId);
             await renderUI();
-            await renderStats(); // Update stats after deleting
+            await renderStats(); // Update stats
         }
     }
 
@@ -307,15 +421,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const topicDateInput = target.previousElementSibling;
             const topicName = topicNameInput.value.trim();
             const lastRevisedDate = topicDateInput.value; 
-
             if (topicName && lastRevisedDate) {
                 const newTopic = {
-                    id: Date.now(),
-                    name: topicName,
-                    lastRevised: lastRevisedDate,
-                    revisionLevel: 0,
+                    id: Date.now(), name: topicName,
+                    lastRevised: lastRevisedDate, revisionLevel: 0,
                     nextRevisionDate: calculateNextRevisionDate(lastRevisedDate, 0),
-                    isComplete: false // NEW: Add completion flag
+                    isComplete: false 
                 };
                 const subject = await db.get('subjects', subjectId);
                 subject.topics.push(newTopic);
@@ -325,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // NEW: Handle Checkbox Click
+        // Handle Checkbox Click
         if (target.classList.contains('topic-complete-checkbox')) {
             const topicId = parseInt(target.dataset.topicId);
             const subject = await db.get('subjects', subjectId);
@@ -333,8 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (topicIndex > -1) {
                 subject.topics[topicIndex].isComplete = target.checked;
                 await db.put('subjects', subject);
-                await renderUI(); // Re-render to update subject percentage
-                await renderStats(); // Re-render to update overall percentage
+                await renderUI(); 
+                await renderStats(); 
             }
         }
 
@@ -345,14 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.classList.contains('revise-btn')) {
             const subject = await db.get('subjects', subjectId);
             const topicIndex = subject.topics.findIndex(t => t.id === topicId);
-            
             if (topicIndex > -1) {
                 let topic = subject.topics[topicIndex];
                 topic.lastRevised = getISODate(new Date());
                 topic.revisionLevel += 1;
                 topic.nextRevisionDate = calculateNextRevisionDate(topic.lastRevised, topic.revisionLevel);
-                topic.isComplete = true; // NEW: Revising also marks as complete
-                
+                topic.isComplete = true;
                 await db.put('subjects', subject);
                 await addCompletionStat(); 
                 await renderUI();
