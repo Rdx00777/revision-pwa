@@ -1,0 +1,348 @@
+/* --- Google Font Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+/* --- CSS Variables (Dark Mode by Default) --- */
+:root {
+    --primary-color: #007aff; 
+    --primary-hover: #0056b3;
+    --success-color: #34c759;
+    --success-hover: #2a9e46;
+    --danger-color: #ff3b30;
+    --danger-hover: #c70000;
+
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #f0f0f0;
+    --text-muted: #8e8e93;
+    --border-color: #3a3a3c;
+    --shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Light Mode Variables --- */
+body.light-mode {
+    --primary-color: #007aff;
+    --primary-hover: #0056b3;
+    --success-color: #34c759;
+    --success-hover: #2a9e46;
+    --danger-color: #ff3b30;
+    --danger-hover: #c70000;
+
+    --bg-color: #f0f2f5;
+    --card-bg: #ffffff;
+    --text-color: #1c1c1e;
+    --text-muted: #6a6a6a;
+    --border-color: #dcdcdc;
+    --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Basic Setup --- */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* --- Layout --- */
+header {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header h1 {
+    font-size: 1.75rem;
+    margin: 0;
+    font-weight: 700;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#theme-toggle-btn {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+}
+
+main {
+    padding: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+section.card,
+.subject-card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* --- Buttons & Forms --- */
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: background-color 0.2s, transform 0.1s;
+}
+button:hover { background-color: var(--primary-hover); }
+button:active { transform: scale(0.98); }
+
+#enable-notifications-btn {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+}
+#enable-notifications-btn:hover { background-color: rgba(0, 122, 255, 0.1); }
+
+
+button.delete-btn { background-color: var(--danger-color); }
+button.delete-btn:hover { background-color: var(--danger-hover); }
+
+button.revise-btn { background-color: var(--success-color); }
+button.revise-btn:hover { background-color: var(--success-hover); }
+
+input[type="text"],
+input[type="date"],
+input[type="number"] {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box; 
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Stats Section --- */
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    gap: 1rem; /* Added gap */
+}
+.stat-item .stat-value {
+    display: block;
+    font-size: 2.5rem; /* Adjusted font size */
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.1;
+}
+.stat-item .stat-label {
+    font-size: 0.9rem; /* Adjusted font size */
+    color: var(--text-muted);
+}
+
+/* --- Settings Section --- */
+#settings-section .form-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+#settings-section label {
+    flex-basis: 120px;
+    font-weight: 500;
+}
+#settings-section input[type="number"] {
+    width: 80px;
+}
+#save-settings-btn {
+    background-color: var(--success-color);
+}
+#save-settings-btn:hover {
+    background-color: var(--success-hover);
+}
+
+
+/* --- Pomodoro Timer --- */
+#timer-display {
+    font-size: 5rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--primary-color);
+    margin: 1rem 0;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+#timer-status {
+    text-align: center;
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* --- Subjects & Topics --- */
+.subject-card h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+}
+/* NEW: Subject Percentage */
+.subject-percentage {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--success-color);
+}
+
+.topic-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    gap: 1rem; /* Added gap */
+}
+.topic-item:last-child { border-bottom: none; }
+
+.topic-info { 
+    flex-grow: 1; 
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.topic-info strong {
+    display: block;
+    font-size: 1.15rem;
+    color: var(--text-color);
+    font-weight: 500;
+}
+.topic-info span {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+.topic-info .due { color: var(--danger-color); font-weight: bold; }
+
+.topic-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0; /* Removed margin */
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+.topic-actions button {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+}
+
+/* NEW: Topic Checkbox */
+.topic-complete-checkbox {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    accent-color: var(--success-color); /* Style the checkbox color */
+}
+
+
+/* --- Today's Revisions --- */
+#today-revisions-list { list-style-type: none; padding: 0; }
+#today-revisions-list li {
+    font-weight: 500;
+    padding: 0.75rem 0.25rem;
+    border-bottom: 1px dashed var(--border-color);
+    font-size: 1.1rem;
+}
+#today-revisions-list li:last-child { border-bottom: none; }
+#today-revisions-list li span {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* --- Pomodoro Focus Mode Styles --- */
+.hidden { display: none !important; }
+.content-hidden header,
+.content-hidden main { display: none; }
+#pomodoro-focus-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    cursor: pointer;
+}
+#focus-timer-status {
+    font-size: 5vw;
+    font-weight: 500;
+    color: #aaa;
+    margin-bottom: 1rem;
+}
+#focus-timer-display {
+    font-size: 20vw; 
+    font-weight: 700;
+    color: #fff;
+}
+#exit-focus-btn {
+    position: absolute;
+    bottom: 3rem;
+    background: #333;
+    border: 1px solid #555;
+    color: #ccc;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+}
+#exit-focus-btn:hover { background: #444; }
+
+
+/* --- Media Queries --- */
+@media (min-width: 600px) {
+    .form-group {
+        flex-direction: row;
+        align-items: center;
+    }
+    input[type="text"] { flex-grow: 1; }
+    .topic-actions { margin-top: 0; }
+
+    #focus-timer-status { font-size: 2rem; }
+    #focus-timer-display { font-size: 12rem; }
+}
