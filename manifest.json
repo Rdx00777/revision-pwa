@@ -1,19 +1,19 @@
 {
     "name": "Revision Tracker PWA",
     "short_name": "Revisions",
-    "start_url": "/index.html",
+    "start_url": "index.html",
     "display": "standalone",
     "background_color": "#121212",
     "theme_color": "#1e1e1e",
     "description": "A PWA to track your study revisions with spaced repetition and completion.",
     "icons": [
         {
-            "src": "/icons/icon-192x192.png",
+            "src": "icons/icon-192x192.png",
             "type": "image/png",
             "sizes": "192x192"
         },
         {
-            "src": "/icons/icon-512x512.png",
+            "src": "icons/icon-512x512.png",
             "type": "image/png",
             "sizes": "512x512"
         }
