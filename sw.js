@@ -1,13 +1,15 @@
-const CACHE_NAME = 'revision-tracker-v1';
+const CACHE_NAME = 'revision-tracker-v2'; // Incremented cache name
+
+// Use relative paths for local files
 const URLS_TO_CACHE = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/app.js',
-    '/manifest.json',
-    '/audio/alarm.mp3',
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png',
+    '.',
+    'index.html',
+    'style.css',
+    'app.js',
+    'manifest.json',
+    'audio/alarm.mp3',
+    'icons/icon-192x192.png',
+    'icons/icon-512x512.png',
     'https://cdn.jsdelivr.net/npm/idb@7/build/umd.js',
     'https://cdn.jsdelivr.net/npm/chart.js',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap'
@@ -19,11 +21,12 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME)
             .then(cache => {
                 console.log('Opened cache');
-                // Use addAll for atomic cache, but be aware it fails if any one resource fails
-                // For CDN resources, it's often safer to cache them on first fetch
-                return cache.addAll(URLS_TO_CACHE).catch(err => {
-                    console.warn("Couldn't cache all files on install:", err);
-                });
+                // We use addAll, but if one file fails (e.g., alarm.mp3), the whole install fails.
+                // Make sure all files are present!
+                return cache.addAll(URLS_TO_CACHE);
+            })
+            .catch(err => {
+                console.error("Cache install failed:", err);
             })
     );
 });
@@ -58,8 +61,12 @@ self.addEventListener('fetch', event => {
                 return fetch(event.request).then(
                     networkResponse => {
                         // Check if we received a valid response
-                        if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                            // Don't cache opaque responses (like from CDNs unless careful)
+                        if(!networkResponse || networkResponse.status !== 200) {
+                            return networkResponse;
+                        }
+
+                        // Don't cache requests that aren't GET
+                        if(event.request.method !== 'GET') {
                             return networkResponse;
                         }
 
@@ -68,7 +75,10 @@ self.addEventListener('fetch', event => {
 
                         caches.open(CACHE_NAME)
                             .then(cache => {
-                                cache.put(event.request, responseToCache);
+                                // Only cache http/https schemes, not chrome-extension://
+                                if(event.request.url.startsWith('http')) {
+                                    cache.put(event.request, responseToCache);
+                                }
                             });
 
                         return networkResponse;
@@ -76,9 +86,8 @@ self.addEventListener('fetch', event => {
                 );
             }
         ).catch(error => {
-            // Handle fetch errors, especially for offline
-            console.log('Fetch failed; returning offline page or fallback', error);
-            // You could return a specific offline fallback page here if you had one
+            console.error('Fetch failed:', error);
+            // You could return a specific offline fallback page here
         })
     );
 });
