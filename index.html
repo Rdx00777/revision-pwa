@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revision Tracker</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" id="theme-color-meta" content="#1e1e1e">
+
+    <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+
+</head>
+<body>
+
+    <header>
+        <h1>Revision Tracker</h1>
+        <div class="header-controls">
+            <button id="enable-notifications-btn">Enable Reminders</button>
+            <button id="theme-toggle-btn">☀️</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="card" id="stats-section">
+            <h2>Your Stats</h2>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class.="stat-value" id="stat-overall-completion">0%</span>
+                    <span class="stat-label">Overall Completion</span>
+                </div>
+                <div class="stat-item">
+                    <span class.="stat-value" id="stat-total-revisions">0</span>
+                    <span class="stat-label">Total Revisions</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-current-streak">0</span>
+                    <span class="stat-label">Current Streak</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card" id="today-section">
+            <h2>Today's Revisions</h2>
+            <ul id="today-revisions-list">
+                </ul>
+        </section>
+
+        <section class="card" id="pomodoro-section">
+            <h2>Pomodoro Timer</h2>
+            <div id="timer-display">25:00</div>
+            <div class="timer-controls">
+                <button id="start-pause-btn">Start</button>
+                <button id="reset-btn">Reset</button>
+            </div>
+            <p id="timer-status">Time to Work!</p>
+        </section>
+
+        <section class="card" id="settings-section">
+            <h2>Settings</h2>
+            <div class="form-group">
+                <label for="work-minutes-input">Work Minutes:</label>
+                <input type="number" id="work-minutes-input" min="1" value="25">
+            </div>
+            <div class="form-group">
+                <label for="break-minutes-input">Break Minutes:</label>
+                <input type="number" id="break-minutes-input" min="1" value="5">
+            </div>
+            <button id="save-settings-btn">Save Settings</button>
+        </section>
+
+        <section class="card" id="add-subject-section">
+            <h2>Add New Subject</h2>
+            <div class="form-group">
+                <input type="text" id="subject-name-input" placeholder="e.g., Mathematics">
+                <button id="add-subject-btn">Add Subject</button>
+            </div>
+        </section>
+
+        <section id="subjects-container">
+            </section>
+
+    </main>
+
+    <div id="pomodoro-focus-overlay" class="hidden">
+        <div id="focus-timer-status">Time to Work!</div>
+        <div id="focus-timer-display">25:00</div>
+        <button id="exit-focus-btn">Exit Focus</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
