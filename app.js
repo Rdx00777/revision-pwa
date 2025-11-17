@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- SERVICE WORKER & NOTIFICATIONS ---
     if ('serviceWorker' in navigator) {
-        // Use relative path
         navigator.serviceWorker.register('sw.js')
             .then(reg => console.log('Service Worker registered', reg))
             .catch(err => console.error('Service Worker registration failed', err));
@@ -21,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then(reg => {
                 reg.showNotification(title, {
-                    // Use relative paths
-                    body: body, icon: 'icons/icon-192x192.png',
-                    badge: 'icons/icon-192x192.png', vibrate: [200, 100, 200]
+                    // *** CHANGED ICON PATHS ***
+                    body: body, icon: 'icons/Focus Mode Wallpaper.jfif',
+                    badge: 'icons/Focus Mode Wallpaper.jfif', vibrate: [200, 100, 200]
                 });
             });
         }
@@ -32,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- THEME (DARK/LIGHT MODE) ---
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const themeMeta = document.getElementById('theme-color-meta');
-    let currentTheme = 'dark'; // Global var for chart colors
+    let currentTheme = 'dark'; 
     function checkTheme() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             themeMeta.content = '#1e1e1e';
             currentTheme = 'dark';
         }
-        renderStats(); // Re-render stats for chart color update
+        renderStats(); 
     });
 
     // --- REVISION LOGIC ---
@@ -100,17 +99,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalRevisionsEl = document.getElementById('stat-total-revisions');
     const currentStreakEl = document.getElementById('stat-current-streak');
     const completionChartTextEl = document.getElementById('completion-chart-text');
-    let overallChart, revisionChart; // Store chart instances
+    let overallChart, revisionChart; 
 
     async function renderStats() {
         const stats = await db.getAll('stats');
         const subjects = await db.getAll('subjects');
 
-        // 1. Calculate & Render Text Stats
         totalRevisionsEl.textContent = stats.length;
         currentStreakEl.textContent = calculateStreak(stats);
 
-        // 2. Calculate Completion
         let totalTopics = 0;
         let completedTopics = 0;
         subjects.forEach(subject => {
@@ -121,10 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const completionPercent = (totalTopics === 0) ? 0 : Math.round((completedTopics / totalTopics) * 100);
         
-        // 3. Calculate Revision History (Last 7 days)
         const history = calculateRevisionHistory(stats);
-
-        // 4. Render Charts
         renderCompletionChart(completionPercent);
         renderRevisionChart(history.labels, history.data);
     }
@@ -132,11 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCompletionChart(percent) {
         const ctx = document.getElementById('overall-completion-chart').getContext('2d');
         const chartTrackColor = (currentTheme === 'light') ? '#dcdcdc' : '#3a3a3c';
-
         completionChartTextEl.textContent = `${percent}%`;
-
         if (overallChart) {
-            overallChart.destroy(); // Destroy old chart before re-drawing
+            overallChart.destroy();
         }
         overallChart = new Chart(ctx, {
             type: 'doughnut',
@@ -167,9 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx = document.getElementById('revision-history-chart').getContext('2d');
         const chartGridColor = (currentTheme === 'light') ? '#dcdcdc' : '#3a3a3c';
         const chartLabelColor = (currentTheme === 'light') ? '#6a6a6a' : '#8e8e93';
-
         if (revisionChart) {
-            revisionChart.destroy(); // Destroy old chart
+            revisionChart.destroy();
         }
         revisionChart = new Chart(ctx, {
             type: 'line',
@@ -196,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         beginAtZero: true,
                         ticks: { 
                             color: chartLabelColor,
-                            precision: 0 // No decimal points
+                            precision: 0
                         },
                         grid: { color: chartGridColor }
                     },
@@ -211,20 +202,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calculateRevisionHistory(stats) {
         let labels = [];
-        let data = [0, 0, 0, 0, 0, 0, 0]; // 7 days
+        let data = [0, 0, 0, 0, 0, 0, 0];
         let day = new Date();
-        
         for (let i = 6; i >= 0; i--) {
             let date = new Date(day.getFullYear(), day.getMonth(), day.getDate() - i);
             let dateString = getISODate(date);
-            
             if (i === 0) labels.push('Today');
             else if (i === 1) labels.push('Yest.');
             else labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
-            
             const stat = stats.find(s => s.date === dateString);
             if (stat) {
-                // This logic just checks if *any* revision was done.
                 data[6 - i] = 1; 
             }
         }
@@ -266,7 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     // --- UI RENDERING (Async) ---
     const subjectsContainer = document.getElementById('subjects-container');
     const todayRevisionsList = document.getElementById('today-revisions-list');
@@ -277,28 +263,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0); 
         let todayRevisions = [];
-
         subjects.forEach(subject => {
             const subjectCard = document.createElement('div');
             subjectCard.className = 'subject-card';
-            
             let totalTopics = subject.topics.length;
             let completedTopics = 0;
             subject.topics.forEach(topic => {
                 if (topic.isComplete) completedTopics++;
             });
             const subjectPercent = (totalTopics === 0) ? 0 : Math.round((completedTopics / totalTopics) * 100);
-
             let topicListHTML = '';
             subject.topics.forEach((topic) => {
                 const nextRevisionDate = new Date(topic.nextRevisionDate.replace(/-/g, '/'));
                 nextRevisionDate.setHours(0,0,0,0);
                 const isDue = nextRevisionDate <= today;
-                
                 if (isDue) {
                     todayRevisions.push({ subject: subject.name, topic: topic.name });
                 }
-
                 topicListHTML += `
                     <div class="topic-item">
                         <div class="topic-info">
@@ -323,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             });
-
             subjectCard.innerHTML = `
                 <h2>
                     <span>${subject.name}</span>
@@ -373,7 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         if (dueCount > 0) {
             showNotification(
                 'Revisions Due!',
@@ -400,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Are you sure you want to delete "${subject.name}" and all its topics?`)) {
             await db.delete('subjects', subjectId);
             await renderUI();
-            await renderStats(); // Update stats
+            await renderStats();
         }
     }
 
@@ -408,8 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         const subjectId = parseInt(target.dataset.subjectId);
         if (!subjectId) return;
-
-        // Add Topic
         if (target.classList.contains('add-topic-btn')) {
             const topicNameInput = target.previousElementSibling.previousElementSibling;
             const topicDateInput = target.previousElementSibling;
@@ -429,8 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 await renderStats();
             }
         }
-        
-        // Handle Checkbox Click
         if (target.classList.contains('topic-complete-checkbox')) {
             const topicId = parseInt(target.dataset.topicId);
             const subject = await db.get('subjects', subjectId);
@@ -442,11 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 await renderStats(); 
             }
         }
-
         const topicId = parseInt(target.dataset.topicId);
         if (!topicId) return;
-        
-        // Revise Topic
         if (target.classList.contains('revise-btn')) {
             const subject = await db.get('subjects', subjectId);
             const topicIndex = subject.topics.findIndex(t => t.id === topicId);
@@ -462,8 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 await renderStats(); 
             }
         }
-
-        // Delete Topic
         if (target.classList.contains('delete-btn') && !target.classList.contains('delete-subject-btn')) {
             if (confirm(`Are you sure you want to delete this topic?`)) {
                 const subject = await db.get('subjects', subjectId);
@@ -476,7 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- POMODORO TIMER ---
-    // Ensure these IDs match your HTML
     const timerDisplay = document.getElementById('timer-display');
     const startPauseBtn = document.getElementById('start-pause-btn');
     const resetBtn = document.getElementById('reset-btn');
@@ -485,7 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusTimerDisplay = document.getElementById('focus-timer-display');
     const focusTimerStatus = document.getElementById('focus-timer-status');
     const exitFocusBtn = document.getElementById('exit-focus-btn');
-    
     let pomodoroConfig = { work: 25, break: 5 };
     let timerInterval = null;
     let isPaused = true;
@@ -493,8 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isInFocusMode = false;
     let timeLeft = pomodoroConfig.work * 60;
     
-    // Use relative path
-    const alarm = new Audio('audio/alarm.mp3');
+    // *** CHANGED AUDIO PATH ***
+    const alarm = new Audio('audio/mixkit-forest-birds-singing-1212.wav');
     alarm.loop = true;
 
     function stopAlarm() { alarm.pause(); alarm.currentTime = 0; }
@@ -503,9 +471,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        
         timerDisplay.textContent = timeString;
-        if (focusTimerDisplay) { // Check if element exists
+        if (focusTimerDisplay) {
             focusTimerDisplay.textContent = timeString;
         }
     }
@@ -537,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTimerDisplay();
             if (timeLeft < 0) {
                 clearInterval(timerInterval);
-                alarm.play().catch(e => console.warn("Audio play failed:", e)); // Added catch
+                alarm.play().catch(e => console.warn("Audio play failed:", e));
                 isWorkSession = !isWorkSession;
                 timeLeft = (isWorkSession ? pomodoroConfig.work : pomodoroConfig.break) * 60;
                 const newStatus = isWorkSession ? 'Time to Work!' : 'Time for a Break!';
@@ -568,7 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isInFocusMode) exitFocusMode();
     }
     
-    // Add checks to prevent errors if elements are missing
     if(startPauseBtn) {
         startPauseBtn.addEventListener('click', () => { (isPaused) ? startTimer() : pauseTimer(); });
     }
