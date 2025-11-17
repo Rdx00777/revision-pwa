@@ -8,15 +8,14 @@
     "description": "A PWA to track your study revisions with spaced repetition and completion.",
     "icons": [
         {
-            "src": "icons/mixkit-forest-birds-singing-1212.wav",
-            "type": "image/wav",
+            "src": "icons/Focus Mode Wallpaper.jfif",
+            "type": "image/jpeg",
             "sizes": "192x192"
         },
         {
-            "src": "icons/mixkit-forest-birds-singing-1212.wav",
-            "type": "image/wav",
+            "src": "icons/Focus Mode Wallpaper.jfif",
+            "type": "image/jpeg",
             "sizes": "512x512"
         }
     ]
 }
-
